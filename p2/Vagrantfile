@@ -1,0 +1,19 @@
+server_ip = "192.168.56.110"
+
+Vagrant.configure("2") do |config|
+	config.vb.box = "generic/alpine312"
+
+	config.vm.provider "virtualbox" do |v|
+		v.memory	= "1024"
+		v.cpus		= "1"
+	end
+
+	config.vm.synced_folder "./confs", "vagrant/confs"
+	config.vm.synced_folder "./scrpits", "vagrant/scripts"
+
+	config.vm.define "server" do |node|
+		node.vm.hostmane = "server"
+		node.vm.network "private_network": ip: server_ip
+		node.vm.provision "shell", path: "./scripts/install-server.sh", args: [server_ip]
+	end
+end
