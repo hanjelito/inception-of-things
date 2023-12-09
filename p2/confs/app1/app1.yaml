@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-one
+  labels:
+    app: app-one
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app-one
+  template:
+    metadata:
+      labels:
+        app: app-one
+    spec:
+      containers:
+        - name: custom-container
+          image: nginx
+          ports:
+            - containerPort: 80
+          env:
+            - name: MESSAGE
+              value: "Hello from app-one."
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-one
+  namespace: app-one-namespace
+spec:
+  selector:
+    app: app-one
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

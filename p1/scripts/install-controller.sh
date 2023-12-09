@@ -20,3 +20,5 @@ sudo cp /etc/rancher/k3s/k3s.yaml /vagrant/confs/
 
 KUBE_CONFIG="/etc/rancher/k3s/k3s.yaml"
 sudo cp ${KUBE_CONFIG} /vagrant/confs/
+
+rm -rf /vagrant/confs/*
