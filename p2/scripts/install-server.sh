@@ -21,28 +21,11 @@ done
 echo "k3s está listo y los nodos están en estado 'Ready'."
 
 # Bucle para crear espacios de nombres y desplegar aplicaciones
-for app in app1 app2 app3; do
-    # Define el espacio de nombres basado en el nombre de la aplicación
-    case $app in
-        app1)
-            namespace="app-one-namespace"
-            ;;
-        app2)
-            namespace="app-two-namespace"
-            ;;
-        app3)
-            namespace="app-three-namespace"
-            ;;
-    esac
-
-    # Crea el espacio de nombres si no existe, redirigiendo los errores a /dev/null
-    echo -e "\e[31m Creando espacio de nombres $namespace si no existe \e[0m"
-    k3s kubectl get namespace $namespace 2>/dev/null || k3s kubectl create namespace $namespace
-
-    # Despliega la aplicación
-    echo -e "\e[31m Creando $app en el espacio de nombres $namespace \e[0m"
-    k3s kubectl apply -f /vagrant/confs/$app/$app.yaml -n $namespace
-done
+# for app in app1 app2 app3; do
+#     # Despliega la aplicación
+#     echo -e "\e[31m Creando $app en el espacio de nombres $app \e[0m"
+#     k3s kubectl apply -f /vagrant/confs/$app/$app.yaml
+# done
 
 # Configuraciones adicionales
 echo "export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '" >> /home/vagrant/.profile
