@@ -21,11 +21,11 @@ done
 echo "k3s está listo y los nodos están en estado 'Ready'."
 
 # Bucle para crear espacios de nombres y desplegar aplicaciones
-# for app in app1 app2 app3; do
-#     # Despliega la aplicación
-#     echo -e "\e[31m Creando $app en el espacio de nombres $app \e[0m"
-#     k3s kubectl apply -f /vagrant/confs/$app/$app.yaml
-# done
+for app in app1 app2 app3 ingress; do
+    # Despliega la aplicación
+    echo -e "\e[31m Creando $app en el espacio de nombres $app \e[0m"
+    k3s kubectl apply -f /vagrant/confs/$app/$app.yaml
+done
 
 # Configuraciones adicionales
 echo "export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '" >> /home/vagrant/.profile
