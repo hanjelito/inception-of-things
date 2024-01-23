@@ -1,0 +1,41 @@
+
+k3d cluster create mi-cluster
+
+kubectl cluster-info
+
+kubectl create namespace argocd
+kubectl create namespace dev
+kubectl get namespace
+
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+
+
+
+argocd login localhost:8080
+argocd account update-password
+
+
+argocd repo add https://github.com/hanjelito/juan-gon-iot
+
+argocd app create mi-aplicacion \
+  --repo https://github.com/hanjelito/juan-gon-iot \
+  --path manifest \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace dev
+
+argocd app sync mi-aplicacion
+
+
+kubectl logs -n argocd $(kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name)
+
+
+kubectl get pods -n dev
+kubectl port-forward <nombre-del-pod> 8888:8888 -n dev
+
+
+
