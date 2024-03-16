@@ -36,6 +36,3 @@ kubectl logs -n argocd $(kubectl get pods -n argocd -l app.kubernetes.io/name=ar
 
 kubectl get pods -n dev
 kubectl port-forward <nombre-del-pod> 8888:8888 -n dev
-
-
-
