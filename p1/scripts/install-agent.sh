@@ -19,3 +19,5 @@ sudo cp /home/vagrant/.kube/config /root/.kube/config
 sudo chown -R vagrant:vagrant /home/vagrant/.kube
 
 # rm -rf /vagrant/confs/node-token
+# kubectl create deployment example-deployment --image=nginx
+# kubectl scale deployment example-deployment --replicas=2
