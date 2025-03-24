@@ -1,20 +1,20 @@
 server_ip = "192.168.56.110"
 agent_ip = "192.168.56.111"
-login = "juan"
+login = "juan" # Cambia esto por tu login personal
 
 Vagrant.configure("2") do |config|
   # Define la caja compatible
   config.vm.box = "gutehall/debian12"
 
-  # Configuración específica para VMware
+  # Configuración específica para proveedor
   config.vm.provider "virtualbox" do |v|
     v.memory = "1024"
     v.cpus = "1"
   end
 
   # Sincronización de carpetas
-  config.vm.synced_folder "./confs", "/vagrant/confs", create: true
-  config.vm.synced_folder "./scripts", "/vagrant/scripts", create: true
+  config.vm.synced_folder "./confs", "/vagrant/confs"
+  config.vm.synced_folder "./scripts", "/vagrant/scripts"
 
   # Definición de la máquina servidor (login+S)
   config.vm.define "#{login}S" do |node|
