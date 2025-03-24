@@ -86,9 +86,9 @@ kubectl apply -f ../confs/application.yaml || handle_error "Error al aplicar la 
 
 echo -e "${CYAN}==> Iniciando reenvío de puertos para la UI de ArgoCD...${NC}"
 # Iniciar reenvío de puertos en segundo plano
-kubectl port-forward svc/argocd-server -n $ARGOCD_NAMESPACE 8080:443 > /dev/null 2>&1 &
+kubectl port-forward --address 0.0.0.0 svc/argocd-server -n $ARGOCD_NAMESPACE 8080:443 > /dev/null 2>&1 &
 PORT_FORWARD_PID=$!
-echo -e "${GR}La UI de ArgoCD está disponible en: https://localhost:8080${NC}"
+echo -e "${GR}La UI de ArgoCD está disponible en: https://$(hostname -I | awk '{print $1}'):8080${NC}"
 echo -e "${YELLOW}(Deberás aceptar la advertencia de certificado autofirmado)${NC}"
 
 echo -e "${CYAN}==> Verificando disponibilidad de la aplicación...${NC}"
