@@ -2,7 +2,7 @@
 
 # Actualizar e instalar paquetes necesarios
 sudo apt-get update -y
-sudo apt-get install -y curl openssh-server openssh-client sshpass
+sudo apt-get install -y curl openssh-server openssh-client
 
 server_ip=$1
 
@@ -29,36 +29,26 @@ sudo sed -i "s/127.0.0.1/${server_ip}/g" ${KUBE_CONFIG}
 sudo cp ${KUBE_CONFIG} /vagrant/confs/
 chmod -R 664 /etc/rancher/k3s/k3s.yaml
 
-# Configurar SSH sin contraseña (ejecutar como usuario vagrant)
+# Configurar SSH sin contraseña
 echo "Configurando SSH sin contraseña..."
-sudo -u vagrant bash << EOF
+
+# Generar clave SSH como usuario vagrant
+sudo -u vagrant bash -c "
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
-ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N "" -C "vagrant@juanS"
-
-# Crear archivo de configuración SSH para deshabilitar comprobación de host
+# Generar clave sólo si no existe
+if [ ! -f ~/.ssh/id_rsa ]; then
+    ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N '' -C 'vagrant@juanS'
+fi
+# Guardar la clave pública en la carpeta compartida
+cp ~/.ssh/id_rsa.pub /vagrant/confs/id_rsa.pub
+# Crear archivo de configuración SSH para aceptar hosts desconocidos
 cat > ~/.ssh/config << EOC
 Host 192.168.56.111
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 EOC
 chmod 600 ~/.ssh/config
-
-# Copiar la clave pública para compartirla con el worker
-cp ~/.ssh/id_rsa.pub /vagrant/confs/server_id_rsa.pub
-EOF
-
-# Crear script auxiliar para configurar el worker
-cat > /vagrant/confs/setup_ssh.sh << EOF
-#!/bin/bash
-# Este script se ejecutará en el worker para configurar SSH
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
-cat /vagrant/confs/server_id_rsa.pub >> ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/authorized_keys
-EOF
-
-# Hacer el script ejecutable
-chmod +x /vagrant/confs/setup_ssh.sh
+"
 
 echo "Configuración del servidor completada"
