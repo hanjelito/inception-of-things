@@ -1,30 +1,31 @@
 server_ip = "192.168.56.110"
 agent_ip = "192.168.56.111"
+login = "juan"
 
 Vagrant.configure("2") do |config|
   # Define la caja compatible
-  config.vm.box = "gutehall/debian12" # Caja seleccionada para VMware y ARM
+  config.vm.box = "gutehall/debian12"
 
   # Configuración específica para VMware
-  config.vm.provider "vmware_desktop" do |v|
-    v.memory = "1024" # Memoria para cada máquina
-    v.cpus = "1"      # Número de CPUs para cada máquina
+  config.vm.provider "virtualbox" do |v|
+    v.memory = "1024"
+    v.cpus = "1"
   end
 
-  # Sincronización de carpetas locales con todas las VMs usando rsync
-  config.vm.synced_folder "./confs", "/vagrant/confs", type: "rsync", rsync__auto: true
-  config.vm.synced_folder "./scripts", "/vagrant/scripts", type: "rsync", rsync__auto: true
+  # Sincronización de carpetas
+  config.vm.synced_folder "./confs", "/vagrant/confs", create: true
+  config.vm.synced_folder "./scripts", "/vagrant/scripts", create: true
 
-  # Definición de la máquina "controller"
-  config.vm.define "controller" do |node|
-    node.vm.hostname = "controller"
+  # Definición de la máquina servidor (login+S)
+  config.vm.define "#{login}S" do |node|
+    node.vm.hostname = "#{login}S"
     node.vm.network "private_network", ip: server_ip
-    node.vm.provision "shell", path: "./scripts/install-controller.sh", args: [server_ip]
+    node.vm.provision "shell", path: "./scripts/install-server.sh", args: [server_ip]
   end
 
-  # Definición de la máquina "agent"
-  config.vm.define "agent" do |node|
-    node.vm.hostname = "agent"
+  # Definición de la máquina worker (login+SW)
+  config.vm.define "#{login}SW" do |node|
+    node.vm.hostname = "#{login}SW"
     node.vm.network "private_network", ip: agent_ip
     node.vm.provision "shell", path: "./scripts/install-agent.sh", args: [server_ip]
   end
