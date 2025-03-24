@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# Actualizar e instalar paquetes necesarios
 sudo apt-get update -y
 sudo apt-get install -y curl openssh-server openssh-client
 
 server_ip=$1
 
-# Esperar a que el token esté disponible
 while [ ! -f /vagrant/confs/node-token ]; do
     echo "Esperando token del servidor..."
     sleep 5
 done
 
-# Configurar SSH para aceptar conexiones sin contraseña
 echo "Configurando SSH sin contraseña..."
 sudo -u vagrant bash -c "
 mkdir -p ~/.ssh
@@ -22,7 +19,6 @@ cat /vagrant/confs/id_rsa.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
 "
 
-# Asegurarse de que la URL de K3s comience con https://
 k3s_url="https://${server_ip}:6443"
 
 # Instalación de K3s en modo worker
