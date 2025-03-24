@@ -1,0 +1,105 @@
+global:
+  edition: ce
+  hosts:
+    domain: gitlab.local
+    https: true
+    externalIP: 192.168.56.110  # Ajusta esto a tu IP real
+  ingress:
+    configureCertmanager: false
+    tls:
+      secretName: gitlab-tls
+  initialRootPassword:
+    secret: gitlab-root-password
+    key: password
+
+certmanager:
+  install: false
+
+nginx-ingress:
+  enabled: false  # Usaremos los servicios de NodePort directamente
+
+gitlab-runner:
+  install: true
+
+# Recursos optimizados para entorno de desarrollo ligero
+postgresql:
+  persistence:
+    size: 8Gi
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+redis:
+  master:
+    persistence:
+      size: 5Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+minio:
+  persistence:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+gitlab:
+  gitaly:
+    persistence:
+      size: 10Gi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+        
+  task-runner:
+    backups:
+      objectStorage:
+        backend: s3
+        config:
+          region: us-east-1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 350Mi
+      limits:
+        cpu: 500m
+        memory: 700Mi
+        
+  webservice:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      requests:
+        cpu: 300m
+        memory: 1.5Gi
+      limits:
+        cpu: 2
+        memory: 3Gi
+        
+  sidekiq:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      requests:
+        cpu: 200m
+        memory: 800Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
