@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: app-two
-          image: paulbouwer/hello-kubernetes:1
+          image: paulbouwer/hello-kubernetes:1.7
           ports:
           - containerPort: 80
           env:
