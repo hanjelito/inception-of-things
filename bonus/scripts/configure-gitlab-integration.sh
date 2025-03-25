@@ -20,14 +20,17 @@ handle_error() {
     exit 1
 }
 
-# Asegurarse de que kubectl y jq están instalados
-if ! command -v kubectl &> /dev/null; then
-    handle_error "kubectl no está instalado. Ejecuta install-tools.sh primero."
-fi
-
-if ! command -v jq &> /dev/null; then
-    echo -e "${CYAN}==> Instalando jq para procesamiento de JSON...${NC}"
-    sudo apt-get update && sudo apt-get install -y jq || handle_error "No se pudo instalar jq"
+# Verificar si ArgoCD namespace existe, si no, crearlo e instalar ArgoCD
+echo -e "${CYAN}==> Verificando si ArgoCD está instalado...${NC}"
+if ! kubectl get namespace $ARGOCD_NAMESPACE &> /dev/null; then
+    echo -e "${CYAN}==> Creando namespace para ArgoCD...${NC}"
+    kubectl create namespace $ARGOCD_NAMESPACE || handle_error "Error al crear el namespace de ArgoCD"
+    
+    echo -e "${CYAN}==> Instalando ArgoCD...${NC}"
+    kubectl apply -n $ARGOCD_NAMESPACE -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml || handle_error "Error al instalar ArgoCD"
+    
+    echo -e "${CYAN}==> Esperando a que ArgoCD esté listo (esto puede tardar unos minutos)...${NC}"
+    kubectl -n $ARGOCD_NAMESPACE wait --for=condition=available deployment/argocd-server --timeout=5m || echo -e "${YELLOW}Timeout esperando a ArgoCD, pero continuaremos...${NC}"
 fi
 
 # Obtener token de GitLab para root
@@ -136,7 +139,9 @@ git add .
 git commit -m "Initial commit with app v1"
 
 # Configurar GitLab como remoto y hacer push
-GITLAB_REPO_URL="http://root:$GITLAB_TOKEN@gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/$GITLAB_PROJECT_NAME.git"
+# Escapar caracteres especiales en la contraseña
+GITLAB_TOKEN_ESCAPED=$(echo "$GITLAB_TOKEN" | sed 's/\//\%2F/g' | sed 's/+/\%2B/g' | sed 's/@/\%40/g')
+GITLAB_REPO_URL="http://root:${GITLAB_TOKEN_ESCAPED}@gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/$GITLAB_PROJECT_NAME.git"
 
 # Intentamos hacer push al repositorio de GitLab
 git remote add origin "$GITLAB_REPO_URL"

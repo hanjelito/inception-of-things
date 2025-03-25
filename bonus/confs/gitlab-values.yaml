@@ -68,12 +68,10 @@ gitlab:
         cpu: 1
         memory: 2Gi
         
-  task-runner:
+  toolbox:
+    enabled: true
     backups:
-      objectStorage:
-        backend: s3
-        config:
-          region: us-east-1
+      enabled: false  # Desactivar copias de seguridad
     resources:
       requests:
         cpu: 50m
