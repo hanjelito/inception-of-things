@@ -21,6 +21,25 @@ if ! command -v k3d &> /dev/null; then
     handle_error "k3d no está instalado. Ejecuta install-tools.sh primero."
 fi
 
+# Verificar y configurar el clúster k3d
+echo -e "${CYAN}==> Verificando estado del cluster k3d...${NC}"
+if ! k3d cluster list | grep -q "$CLUSTER_NAME"; then
+    echo -e "${CYAN}El clúster no existe, creándolo...${NC}"
+    k3d cluster create $CLUSTER_NAME -p "8888:30080@loadbalancer" || handle_error "Error al crear el clúster k3d"
+    echo -e "${CYAN}Esperando a que el clúster esté listo (10 segundos)...${NC}"
+    sleep 10  # Dar tiempo a que el clúster se inicialice completamente
+fi
+
+# Asegurarse de que el contexto de kubectl está configurado correctamente
+echo -e "${CYAN}==> Configurando kubeconfig...${NC}"
+k3d kubeconfig merge $CLUSTER_NAME --kubeconfig-switch-context || handle_error "Error al actualizar kubeconfig"
+
+# Verificar la conexión al clúster
+echo -e "${CYAN}==> Verificando conexión al clúster...${NC}"
+if ! kubectl cluster-info; then
+    handle_error "No se puede conectar al clúster. Verifica que el clúster está en ejecución."
+fi
+
 echo -e "${CYAN}==> Instalando Helm (si no está instalado)...${NC}"
 if ! command -v helm &> /dev/null; then
     echo -e "${CYAN}Instalando Helm...${NC}"

@@ -36,6 +36,15 @@ chmod +x install-tools.sh install-gitlab.sh configure-gitlab-integration.sh || h
 echo -e "${CYAN}==> Instalando herramientas necesarias...${NC}"
 ./install-tools.sh || handle_error "Falló la instalación de herramientas"
 
+# Asegurarse de que los cambios en los grupos Docker surtan efecto
+echo -e "${CYAN}==> Aplicando cambios de permisos de Docker...${NC}"
+if groups | grep -q docker; then
+    echo -e "${GR}Usuario ya en el grupo docker.${NC}"
+else
+    echo -e "${YELLOW}Reiniciando la sesión para aplicar permisos de Docker...${NC}"
+    exec su -l $USER  # Esto reiniciará la sesión del usuario actual
+fi
+
 # 3. Crear directorios de configuración si no existen
 echo -e "${CYAN}==> Creando directorios de configuración...${NC}"
 mkdir -p ../confs || handle_error "No se pudo crear el directorio de configuración"
