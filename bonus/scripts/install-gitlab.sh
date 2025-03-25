@@ -98,32 +98,82 @@ gitlab-runner:
 postgresql:
   persistence:
     size: 8Gi
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
 
 redis:
   master:
     persistence:
       size: 5Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
 
 minio:
   persistence:
     size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
 
 gitlab:
   gitaly:
     persistence:
       size: 10Gi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+        
   toolbox:
+    enabled: true
     backups:
-      objectStorage:
-        backend: s3
-        config:
-          region: us-east-1
+      enabled: false
+    resources:
+      requests:
+        cpu: 50m
+        memory: 350Mi
+      limits:
+        cpu: 500m
+        memory: 700Mi
+        
   webservice:
     minReplicas: 1
     maxReplicas: 1
+    resources:
+      requests:
+        cpu: 300m
+        memory: 1.5Gi
+      limits:
+        cpu: 2
+        memory: 3Gi
+        
   sidekiq:
     minReplicas: 1
     maxReplicas: 1
+    resources:
+      requests:
+        cpu: 200m
+        memory: 800Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
 EOF
 
 # Crear un secret para la contraseña de root
@@ -138,11 +188,23 @@ echo -e "${CYAN}==> Verificando versión disponible del chart de GitLab...${NC}"
 helm search repo gitlab/gitlab --versions | head -2
 
 # Instalar GitLab con versión específica para evitar incompatibilidades
+echo -e "${CYAN}==> Limpiando cualquier instalación previa...${NC}"
+helm uninstall gitlab --namespace $GITLAB_NAMESPACE 2>/dev/null || true
+
+echo -e "${CYAN}==> Instalando GitLab con configuración mínima...${NC}"
 helm install gitlab gitlab/gitlab \
   --namespace $GITLAB_NAMESPACE \
   -f ../confs/gitlab-values.yaml \
   --timeout 15m \
-  --set global.edition=ce || handle_error "Error al instalar GitLab con Helm"
+  --set global.edition=ce \
+  --set global.shell.port=22 \
+  --set gitlab.toolbox.backups.enabled=false \
+  --set certmanager.install=false \
+  --set gitlab.migrations.enabled=true \
+  --set gitlab.webservice.minReplicas=1 \
+  --set gitlab.webservice.maxReplicas=1 \
+  --set gitlab.sidekiq.minReplicas=1 \
+  --set gitlab.sidekiq.maxReplicas=1 || handle_error "Error al instalar GitLab con Helm"
 
 echo -e "${CYAN}==> Esperando a que los pods de GitLab estén listos...${NC}"
 echo -e "${YELLOW}Esto puede tardar varios minutos. Algunos pods pueden reiniciarse varias veces durante la inicialización.${NC}"
