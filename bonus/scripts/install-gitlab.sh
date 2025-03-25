@@ -112,7 +112,7 @@ gitlab:
   gitaly:
     persistence:
       size: 10Gi
-  task-runner:
+  toolbox:
     backups:
       objectStorage:
         backend: s3
@@ -132,10 +132,17 @@ kubectl create secret generic gitlab-root-password --from-literal=password=$GITL
 
 echo -e "${CYAN}==> Instalando GitLab usando Helm (esto puede tardar varios minutos)...${NC}"
 echo -e "${YELLOW}Instalación de GitLab iniciada. Este proceso puede tardar entre 5-10 minutos dependiendo de tu conexión y recursos.${NC}"
+
+# Verificar versión del chart de GitLab disponible
+echo -e "${CYAN}==> Verificando versión disponible del chart de GitLab...${NC}"
+helm search repo gitlab/gitlab --versions | head -2
+
+# Instalar GitLab con versión específica para evitar incompatibilidades
 helm install gitlab gitlab/gitlab \
   --namespace $GITLAB_NAMESPACE \
   -f ../confs/gitlab-values.yaml \
-  --timeout 10m || handle_error "Error al instalar GitLab con Helm"
+  --timeout 15m \
+  --set global.edition=ce || handle_error "Error al instalar GitLab con Helm"
 
 echo -e "${CYAN}==> Esperando a que los pods de GitLab estén listos...${NC}"
 echo -e "${YELLOW}Esto puede tardar varios minutos. Algunos pods pueden reiniciarse varias veces durante la inicialización.${NC}"
