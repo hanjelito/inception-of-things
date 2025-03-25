@@ -59,6 +59,10 @@ echo -e "${CYAN}==> Añadiendo repositorio de GitLab Helm...${NC}"
 helm repo add gitlab https://charts.gitlab.io/ || handle_error "Error al añadir el repositorio de GitLab Helm"
 helm repo update || handle_error "Error al actualizar repositorios de Helm"
 
+# Eliminar cualquier secreto TLS existente antes de crear uno nuevo
+echo -e "${CYAN}==> Limpiando cualquier configuración TLS anterior...${NC}"
+kubectl delete secret gitlab-tls -n $GITLAB_NAMESPACE --ignore-not-found
+
 # Generar un certificado TLS autofirmado para GitLab
 echo -e "${CYAN}==> Generando certificado TLS autofirmado para GitLab...${NC}"
 mkdir -p ../confs/gitlab-certs
@@ -175,6 +179,10 @@ gitlab:
         cpu: 1
         memory: 2Gi
 EOF
+
+# Eliminar cualquier secreto de contraseña root existente
+echo -e "${CYAN}==> Limpiando cualquier configuración de contraseña anterior...${NC}"
+kubectl delete secret gitlab-root-password -n $GITLAB_NAMESPACE --ignore-not-found
 
 # Crear un secret para la contraseña de root
 GITLAB_ROOT_PASSWORD=$(openssl rand -base64 12)

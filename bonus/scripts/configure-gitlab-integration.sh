@@ -20,6 +20,10 @@ handle_error() {
     exit 1
 }
 
+# Eliminar cualquier namespace de ArgoCD existente
+echo -e "${CYAN}==> Limpiando cualquier instalación previa de ArgoCD...${NC}"
+kubectl delete namespace $ARGOCD_NAMESPACE --ignore-not-found
+
 # Verificar si ArgoCD namespace existe, si no, crearlo e instalar ArgoCD
 echo -e "${CYAN}==> Verificando si ArgoCD está instalado...${NC}"
 if ! kubectl get namespace $ARGOCD_NAMESPACE &> /dev/null; then
@@ -32,6 +36,11 @@ if ! kubectl get namespace $ARGOCD_NAMESPACE &> /dev/null; then
     echo -e "${CYAN}==> Esperando a que ArgoCD esté listo (esto puede tardar unos minutos)...${NC}"
     kubectl -n $ARGOCD_NAMESPACE wait --for=condition=available deployment/argocd-server --timeout=5m || echo -e "${YELLOW}Timeout esperando a ArgoCD, pero continuaremos...${NC}"
 fi
+
+# Eliminar cualquier namespace dev existente
+echo -e "${CYAN}==> Limpiando cualquier namespace dev existente...${NC}"
+kubectl delete namespace $DEV_NAMESPACE --ignore-not-found
+kubectl create namespace $DEV_NAMESPACE || handle_error "Error al crear el namespace dev"
 
 # Obtener token de GitLab para root
 echo -e "${CYAN}==> Obteniendo credenciales de GitLab...${NC}"
@@ -65,7 +74,7 @@ while ! check_gitlab_ready; do
     sleep 10
 done
 
-# Crear un token de acceso personal para el usuario root
+# Eliminar token existente y crear uno nuevo
 echo -e "${CYAN}==> Creando token de acceso personal en GitLab...${NC}"
 
 # Usamos kubectl exec para ejecutar curl dentro del contenedor de GitLab
@@ -79,6 +88,12 @@ if [ -z "$GITLAB_TOKEN" ]; then
     echo -e "${YELLOW}No se pudo crear un nuevo token, intentando usar la contraseña de root como token...${NC}"
     GITLAB_TOKEN=$GITLAB_ROOT_PASSWORD
 fi
+
+# Eliminar proyecto existente antes de crear uno nuevo
+echo -e "${CYAN}==> Verificando si el proyecto ya existe en GitLab...${NC}"
+kubectl -n $GITLAB_NAMESPACE exec deploy/gitlab-webservice-default -- curl -s -k -X DELETE \
+    -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+    "$GITLAB_API/projects/root%2F$GITLAB_PROJECT_NAME" > /dev/null
 
 # Crear proyecto en GitLab
 echo -e "${CYAN}==> Creando proyecto en GitLab...${NC}"
@@ -157,6 +172,9 @@ if ! git push -u origin master; then
     echo -e "${YELLOW}   git push -u gitlab main${NC}"
 fi
 
+# Eliminar secret existente en ArgoCD
+kubectl -n $ARGOCD_NAMESPACE delete secret gitlab-credentials --ignore-not-found
+
 # Crear secret en ArgoCD para acceder a GitLab
 echo -e "${CYAN}==> Configurando ArgoCD para usar GitLab...${NC}"
 kubectl -n $ARGOCD_NAMESPACE create secret generic gitlab-credentials \
@@ -164,7 +182,11 @@ kubectl -n $ARGOCD_NAMESPACE create secret generic gitlab-credentials \
     --from-literal=username=root \
     --from-literal=password="$GITLAB_TOKEN" || handle_error "Error al crear secret para GitLab en ArgoCD"
 
+# Eliminar aplicación ArgoCD existente
+kubectl delete -f ../confs/argocd-gitlab-application.yaml --ignore-not-found 2>/dev/null || true
+
 # Actualizar la aplicación de ArgoCD para usar GitLab
+mkdir -p ../confs
 cat > ../confs/argocd-gitlab-application.yaml <<EOF
 apiVersion: argoproj.io/v1alpha1
 kind: Application

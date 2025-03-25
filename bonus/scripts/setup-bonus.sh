@@ -20,6 +20,10 @@ if [ ! -f "install-tools.sh" ]; then
     handle_error "No se encontró el script install-tools.sh. Asegúrate de estar en el directorio correcto."
 fi
 
+if [ ! -f "fix-k3d-connection.sh" ]; then
+    handle_error "No se encontró el script fix-k3d-connection.sh. Asegúrate de estar en el directorio correcto."
+fi
+
 if [ ! -f "install-gitlab.sh" ]; then
     handle_error "No se encontró el script install-gitlab.sh. Asegúrate de estar en el directorio correcto."
 fi
@@ -30,7 +34,7 @@ fi
 
 # 1. Hacer scripts ejecutables
 echo -e "${CYAN}==> Haciendo scripts ejecutables...${NC}"
-chmod +x install-tools.sh install-gitlab.sh configure-gitlab-integration.sh || handle_error "No se pudieron establecer permisos de ejecución"
+chmod +x install-tools.sh fix-k3d-connection.sh install-gitlab.sh configure-gitlab-integration.sh || handle_error "No se pudieron establecer permisos de ejecución"
 
 # 2. Instalar herramientas necesarias
 echo -e "${CYAN}==> Instalando herramientas necesarias...${NC}"
