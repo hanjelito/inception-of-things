@@ -20,14 +20,6 @@ curl -fsSL https://get.docker.com -o get-docker.sh || handle_error "Failed to do
 sudo sh get-docker.sh || handle_error "Failed to install Docker"
 sudo usermod -aG docker $USER || handle_error "Failed to add user to docker group"
 
-# Verificar si el usuario ya puede usar Docker
-echo "${CYAN}==> Verificando permisos de Docker...${NC}"
-if ! docker info &>/dev/null; then
-    echo -e "${YELLOW}IMPORTANTE: Necesitas reiniciar la sesión para usar Docker sin sudo${NC}"
-    echo -e "${YELLOW}Ejecuta 'exit' y luego 'vagrant ssh' antes de usar start.sh${NC}"
-    echo -e "${YELLOW}Alternativamente, puedes ejecutar 'sudo ./start.sh'${NC}"
-fi
-
 echo "----------------- ${GR}Installing Kubectl${NC} -------------------------------"
 if [ -f /usr/local/bin/kubectl ]; then
     sudo rm /usr/local/bin/kubectl

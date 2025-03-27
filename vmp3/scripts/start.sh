@@ -22,29 +22,12 @@ if ! command -v k3d &> /dev/null; then
     handle_error "k3d no está instalado. Ejecuta install-tools.sh primero."
 fi
 
-# Verificar acceso a Docker
-if ! docker info &>/dev/null; then
-    echo -e "${YELLOW}No tienes acceso a Docker sin sudo. Intenta:${NC}"
-    echo -e "${YELLOW}1. Ejecutar 'exit' y luego 'vagrant ssh' para reiniciar sesión${NC}"
-    echo -e "${YELLOW}2. O ejecutar este script con sudo: 'sudo ./start.sh'${NC}"
-    echo -e "${YELLOW}¿Deseas continuar con sudo? (s/n)${NC}"
-    read -r respuesta
-    if [[ "$respuesta" =~ ^[Ss]$ ]]; then
-        echo -e "${CYAN}Ejecutando con sudo...${NC}"
-        exec sudo "$0" "$@"
-        exit $?
-    else
-        exit 1
-    fi
-fi
-
 echo -e "${CYAN}==> Eliminando cluster k3d existente (si existe)...${NC}"
 k3d cluster delete $CLUSTER_NAME &>/dev/null || true
 
 echo -e "${CYAN}==> Creando cluster k3d...${NC}"
 k3d cluster create $CLUSTER_NAME -p "8888:30080@loadbalancer" || handle_error "Error al crear el cluster k3d"
 
-# Resto del script sin cambios...
 echo -e "${CYAN}==> Verificando que el cluster está funcionando...${NC}"
 kubectl cluster-info || handle_error "El cluster de Kubernetes no está funcionando"
 
